@@ -77,9 +77,20 @@ struct RootView: View {
     @EnvironmentObject private var devices: DeviceStore
     @AppStorage(ThemePreference.key) private var themePreference = ThemePreference.system
     private let connection = EngineConnection.shared
+    /// dsh://devices 打开设备面板（模拟器里点不了界面，用它来验证）
+    @State private var showDevices = false
 
     var body: some View {
-        content.background(WindowAppearance(style: ThemePreference.style(themePreference)))
+        content
+            .background(WindowAppearance(style: ThemePreference.style(themePreference)))
+            .sheet(isPresented: ) {
+                DeviceSwitcher().environmentObject(devices)
+                    .presentationDetents([.height(320), .medium])
+                    .presentationDragIndicator(.visible)
+            }
+            .onOpenURL { url in
+                if url.host == "devices" { showDevices = true }
+            }
     }
 
     @ViewBuilder
