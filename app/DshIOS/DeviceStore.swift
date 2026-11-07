@@ -54,7 +54,9 @@ final class DeviceStore: ObservableObject {
 
         // 先把值算到局部变量：初始化器里在所有存储属性赋值完成前不能读 self，
         // 所以这里不能用 devices / currentID 互相引用。
-        let stored = UserDefaults.standard.string(forKey: currentKey)
+        // 环境变量 DSH_DEVICE=pc2 可强制选某台（模拟器里没法点界面，用它验证切换流程）
+        let forced = ProcessInfo.processInfo.environment["DSH_DEVICE"]
+        let stored = forced ?? UserDefaults.standard.string(forKey: currentKey)
         let picked: String
         if let stored, list.contains(where: { $0.id == stored }) {
             picked = stored
