@@ -83,7 +83,7 @@ struct RootView: View {
     var body: some View {
         content
             .background(WindowAppearance(style: ThemePreference.style(themePreference)))
-            .sheet(isPresented: ) {
+            .sheet(isPresented: $showDevices) {
                 DeviceSwitcher().environmentObject(devices)
                     .presentationDetents([.height(320), .medium])
                     .presentationDragIndicator(.visible)
