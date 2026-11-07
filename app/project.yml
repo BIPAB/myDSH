@@ -1,0 +1,82 @@
+name: DshIOS
+options:
+  bundleIdPrefix: com.wsw
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+  developmentLanguage: zh-Hans
+packages:
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    exactVersion: 1.10.0
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "1.0.1"
+    CURRENT_PROJECT_VERSION: "12"
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+targets:
+  DshIOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: DshIOS
+      - path: Shared
+    dependencies:
+      - sdk: Security.framework
+      - sdk: CoreGraphics.framework
+      - package: SwiftTerm
+      - target: DshLiveActivity
+    info:
+      path: DshIOS/Info.plist
+      properties:
+        CFBundleDisplayName: DSH Remote
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [zh-Hans, en]
+        UILaunchScreen:
+          UIColorName: Background
+          UIImageName: LaunchMark
+          UIImageRespectsSafeAreaInsets: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+        CADisableMinimumFrameDurationOnPhone: true
+        NSCameraUsageDescription: 拍照后作为附件发给智能体。
+        ITSAppUsesNonExemptEncryption: false
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+          NSAllowsArbitraryLoadsInWebContent: true
+        UIBackgroundModes: [audio]
+        NSSupportsLiveActivities: true
+        CFBundleURLTypes:
+          - CFBundleURLName: com.wsw.dsh-ios
+            CFBundleURLSchemes: [dsh]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wsw.dsh-remote
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+  DshLiveActivity:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LiveActivity
+      - path: Shared
+    info:
+      path: LiveActivity/Info.plist
+      properties:
+        CFBundleDisplayName: DSH Remote
+        CFBundleDevelopmentRegion: en
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wsw.dsh-remote.LiveActivity

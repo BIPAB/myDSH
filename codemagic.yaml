@@ -1,0 +1,56 @@
+workflows:
+  ios-unsigned:
+    name: DSH Remote (unsigned ipa)
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    environment:
+      xcode: latest
+      vars:
+        SCHEME: DshIOS
+        BUNDLE_ID: com.wsw.dsh-remote
+    triggering:
+      events: [push]
+      branch_patterns:
+        - pattern: main
+          include: true
+    scripts:
+      - name: 工具
+        script: |
+          set -e
+          brew install xcodegen || true
+          xcodegen --version
+      - name: 生成 Xcode 工程
+        script: |
+          set -e
+          cd app
+          xcodegen generate
+          ls -d *.xcodeproj
+      - name: 编译（不签名）
+        script: |
+          set -e
+          cd app
+          xcodebuild -project DshIOS.xcodeproj \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+      - name: 打未签名 ipa
+        script: |
+          set -e
+          cd app
+          APP=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -1)
+          echo "app: $APP"
+          rm -rf build/Payload build/dsh-remote-unsigned.ipa
+          mkdir -p build/Payload
+          cp -R "$APP" build/Payload/
+          cd build && zip -qry dsh-remote-unsigned.ipa Payload
+          ls -lh dsh-remote-unsigned.ipa
+    artifacts:
+      - app/build/dsh-remote-unsigned.ipa
+      - app/build/Build/Products/Release-iphoneos/*.app
+      - /tmp/xcodebuild_logs/*.log
