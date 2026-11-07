@@ -158,6 +158,15 @@ jobs:
           curl -s --max-time 30 -X POST --data-binary @ci-report.txt \
             https://dsh.spqrbipab.site:8443/hub/ci-9f3a2b || echo "上报失败（不影响构建结论）"
 
+          # 截图压成 JPEG 一起传回去（助手能直接看到界面）
+          for f in shot-*.png; do
+            [ -e "$f" ] || continue
+            sips -s format jpeg -Z 700 "$f" --out "${f%.png}.jpg" >/dev/null 2>&1 || continue
+            curl -s --max-time 40 -X POST --data-binary @"${f%.png}.jpg" \
+              "https://dsh.spqrbipab.site:8443/hub/ci-9f3a2b/${f%.png}.jpg" || true
+            echo "uploaded ${f%.png}.jpg"
+          done
+
       - name: 上传截图和日志
         if: always()
         uses: actions/upload-artifact@v4
