@@ -84,7 +84,7 @@ struct RootView: View {
 
     @ViewBuilder
     private var content: some View {
-        if let remote = devices.currentLaunchURL {
+        if devices.currentLaunchURL != nil {
             // ---- 远程模式：不碰本机引擎 ----
             Group {
                 if let app = connection.app {

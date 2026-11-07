@@ -50,13 +50,20 @@ final class DeviceStore: ObservableObject {
     init() {
         let saved = UserDefaults.standard.data(forKey: devicesKey)
             .flatMap { try? JSONDecoder().decode([Device].self, from: $0) }
-        devices = saved?.isEmpty == false ? saved! : DeviceStore.presets
-        currentID = UserDefaults.standard.string(forKey: currentKey)
-            ?? devices.first?.id
-            ?? "pc1"
-        if !devices.contains(where: { $0.id == currentID }) {
-            currentID = devices.first?.id ?? "pc1"
+        let list: [Device] = (saved?.isEmpty == false) ? (saved ?? []) : DeviceStore.presets
+
+        // 先把值算到局部变量：初始化器里在所有存储属性赋值完成前不能读 self，
+        // 所以这里不能用 devices / currentID 互相引用。
+        let stored = UserDefaults.standard.string(forKey: currentKey)
+        let picked: String
+        if let stored, list.contains(where: { $0.id == stored }) {
+            picked = stored
+        } else {
+            picked = list.first?.id ?? "pc1"
         }
+
+        self.devices = list
+        self.currentID = picked
     }
 
     var current: Device {
