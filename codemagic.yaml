@@ -27,8 +27,8 @@ workflows:
           ls -d *.xcodeproj
       - name: 编译（不签名）
         script: |
-          set -e
           cd app
+          set +e
           xcodebuild -project DshIOS.xcodeproj \
             -scheme "$SCHEME" \
             -configuration Release \
@@ -38,7 +38,16 @@ workflows:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            build
+            build > "$CM_BUILD_DIR/xcodebuild.log" 2>&1
+          STATUS=$?
+          echo "======================================================"
+          echo "  xcodebuild exit: $STATUS"
+          echo "  下面只列 error: （复制这一段发给助手就够）"
+          echo "======================================================"
+          grep -n "error:" "$CM_BUILD_DIR/xcodebuild.log" | head -40
+          echo "------------------------------------------------------"
+          echo "共 $(grep -c "error:" "$CM_BUILD_DIR/xcodebuild.log") 条 error"
+          exit $STATUS
       - name: 打未签名 ipa
         script: |
           set -e
