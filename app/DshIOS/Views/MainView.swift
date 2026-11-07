@@ -99,38 +99,14 @@ struct MainView: View {
     }
 
     var body: some View {
-        layout
-        .tint(Palette.ink)
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { windowWidth = $0 }
-        .focusedSceneValue(\.windowCommands, windowCommands)
-        // A `dsh://` link goes to a window that is already open. Only that: `openWindow` asks
-        // through the same door, and a wider match would swallow every new window.
-        .handlesExternalEvents(preferring: ["dsh://"], allowing: ["dsh://"])
-        .task(id: app.workspaces.map(\.id)) { if selection == nil { newConversation(in: workspace) } }
-        .task(id: canAnnounce) {
-            guard canAnnounce else { return }
-            await UpdateChecker.shared.checkIfDue()
-            guard let update = UpdateChecker.shared.takeAnnouncement() else { return }
-            app.showToast(String(localized: "发现新版本 \(update.version)"), action: String(localized: "更新")) { openURL(update.url) }
-        }
-        // After a pause, and only into a quiet app: otherwise the next finished turn asks instead.
-        .task(id: app.supportMoment) {
-            guard app.supportMoment > 0 else { return }
-            try? await Task.sleep(for: .seconds(2))
-            guard !Task.isCancelled, canAnnounce, app.toast == nil, app.currentSession == selection,
-                  !app.sessions.values.contains(where: \.running), SupportPrompt.take() else { return }
-            supportDialog = true
-        }
-        // Windows take turns: what is read is the one in front.
-        .onChange(of: scenePhase) { _, phase in if phase == .active { app.currentSession = selection } }
-        .onChange(of: selection) { _, id in
-            app.currentSession = id
-            if let id {
-                if let owner = app.workspace(of: id) { workspaceId = owner.id }
-            } else {
-                newConversation(in: workspace)
-            }
-        }
+        decorated
+    }
+
+    /// 拆成两段：整条 modifier 链太长，Swift 的类型检查会超时
+    /// （模拟器构建实测 error: unable to type-check in reasonable time）。
+    /// 两段之间只是调用关系，行为和原来完全一样。
+    private var decorated: some View {
+        half
         // An archived current session leaves the main view (here, the drawer, a follow push).
         .onChange(of: app.archived) { _, archived in
             if let selection, archived.contains(selection) { self.selection = nil }
@@ -228,6 +204,41 @@ struct MainView: View {
             Text(app.lastError ?? "")
         }
         .environment(\.openSession) { open(session: $0) }
+    }
+
+    private var half: some View {
+        layout
+        .tint(Palette.ink)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { windowWidth = $0 }
+        .focusedSceneValue(\.windowCommands, windowCommands)
+        // A `dsh://` link goes to a window that is already open. Only that: `openWindow` asks
+        // through the same door, and a wider match would swallow every new window.
+        .handlesExternalEvents(preferring: ["dsh://"], allowing: ["dsh://"])
+        .task(id: app.workspaces.map(\.id)) { if selection == nil { newConversation(in: workspace) } }
+        .task(id: canAnnounce) {
+            guard canAnnounce else { return }
+            await UpdateChecker.shared.checkIfDue()
+            guard let update = UpdateChecker.shared.takeAnnouncement() else { return }
+            app.showToast(String(localized: "发现新版本 \(update.version)"), action: String(localized: "更新")) { openURL(update.url) }
+        }
+        // After a pause, and only into a quiet app: otherwise the next finished turn asks instead.
+        .task(id: app.supportMoment) {
+            guard app.supportMoment > 0 else { return }
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled, canAnnounce, app.toast == nil, app.currentSession == selection,
+                  !app.sessions.values.contains(where: \.running), SupportPrompt.take() else { return }
+            supportDialog = true
+        }
+        // Windows take turns: what is read is the one in front.
+        .onChange(of: scenePhase) { _, phase in if phase == .active { app.currentSession = selection } }
+        .onChange(of: selection) { _, id in
+            app.currentSession = id
+            if let id {
+                if let owner = app.workspace(of: id) { workspaceId = owner.id }
+            } else {
+                newConversation(in: workspace)
+            }
+        }
     }
 
     // MARK: Credentials
