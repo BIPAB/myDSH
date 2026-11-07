@@ -130,6 +130,16 @@ final class BackgroundKeeper {
         running.count == 1 ? running[0] : String(localized: "\(running.count) 个会话进行中")
     }
 
+#if targetEnvironment(simulator)
+
+    // iOS 26 的 continued-processing API 在模拟器 SDK 里不存在（真机 SDK 有），
+    // 模拟器构建时整段降级为空实现，行为等价于"不申请续跑"。
+    private func startContinued() {}
+    private func tick() {}
+    private func finishContinued() {}
+
+#else
+
     private func startContinued() {
         guard #available(iOS 26.0, *), continuedEnabled, !running.isEmpty, continued == nil, submitted == nil, !halted else { return }
         // Info.plist permits `<prefix>.*`; handlers are registered per concrete
@@ -193,6 +203,8 @@ final class BackgroundKeeper {
         task.progress.completedUnitCount = task.progress.totalUnitCount
         task.setTaskCompleted(success: true)
     }
+#endif
+
 }
 
 /// Plays silence through a mixable `.playback` session: the app keeps running
