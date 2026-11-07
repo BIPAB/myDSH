@@ -1,0 +1,124 @@
+name: iOS Simulator
+
+# 在云端 macOS 上跑 iPhone 16 Pro 模拟器：
+# 编译 → 装进模拟器 → 启动 → 等几秒 → 截图 → 存成 artifact。
+# 不需要签名、不需要开发者账号（模拟器不校验签名）。
+#
+# 公开仓库的 macOS runner 免费、无分钟上限，所以这个循环随便跑。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  simulator:
+    name: Build & screenshot
+    runs-on: macos-15
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 显示 Xcode 版本
+        run: |
+          xcodebuild -version
+          xcrun simctl list runtimes
+
+      - name: 安装 xcodegen
+        run: |
+          brew install xcodegen || true
+          xcodegen --version
+
+      - name: 生成 Xcode 工程
+        run: |
+          cd app
+          xcodegen generate
+          ls -d *.xcodeproj
+
+      - name: 编译（模拟器，不签名）
+        run: |
+          cd app
+          set -o pipefail
+          xcodebuild -project DshIOS.xcodeproj \
+            -scheme DshIOS \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee ../xcodebuild-sim.log | tail -40
+
+      - name: 选一台 iPhone 模拟器并启动
+        id: sim
+        run: |
+          set -e
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices[][] | select(.name | test("^iPhone 16 Pro$"))] | first | .udid // empty')
+          if [ -z "$UDID" ]; then
+            UDID=$(xcrun simctl list devices available -j \
+              | jq -r '[.devices[][] | select(.name | test("^iPhone"))] | last | .udid // empty')
+          fi
+          if [ -z "$UDID" ]; then
+            echo "没有可用的 iPhone 模拟器"; xcrun simctl list devices available; exit 1
+          fi
+          echo "选中: $UDID"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: 装进模拟器
+        run: |
+          APP=$(find app/build/Build/Products/Debug-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
+          echo "app: $APP"
+          xcrun simctl install "${{ steps.sim.outputs.udid }}" "$APP"
+
+      - name: 启动并截图
+        run: |
+          set +e
+          UDID="${{ steps.sim.outputs.udid }}"
+          BUNDLE=com.wsw.dsh-remote
+
+          # 后台抓一段 App 日志，崩溃时能看出原因
+          ( xcrun simctl spawn "$UDID" log stream --style compact \
+              --predicate "process == \"DshIOS\"" > app-log.txt 2>&1 & echo $! > log.pid )
+
+          xcrun simctl launch "$UDID" "$BUNDLE" || echo "launch 返回非零"
+
+          sleep 6
+          xcrun simctl io "$UDID" screenshot shot-01-launch.png
+
+          sleep 6
+          xcrun simctl io "$UDID" screenshot shot-02.png
+
+          sleep 8
+          xcrun simctl io "$UDID" screenshot shot-03.png
+
+          kill "$(cat log.pid)" 2>/dev/null
+
+          ls -lh *.png
+          echo "--- App 日志（尾部）---"
+          tail -40 app-log.txt
+
+      - name: 崩溃时补充诊断
+        if: always()
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          echo "=== 最近崩溃 ==="
+          ls -lt ~/Library/Logs/DiagnosticReports/ 2>/dev/null | head -10
+          for f in $(ls -t ~/Library/Logs/DiagnosticReports/DshIOS*.ips 2>/dev/null | head -2); do
+            echo "--- $f ---"; head -80 "$f"
+          done
+          echo "=== simctl 设备状态 ==="
+          xcrun simctl list devices | grep -i "$UDID" || true
+
+      - name: 上传截图和日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-screenshots
+          path: |
+            shot-*.png
+            app-log.txt
+            xcodebuild-sim.log
+          if-no-files-found: warn
