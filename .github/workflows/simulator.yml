@@ -65,7 +65,7 @@ jobs:
           set -o pipefail
           xcodebuild -project DshIOS.xcodeproj \
             -scheme DshIOS \
-            -configuration Debug \
+            -configuration Release \
             -sdk iphonesimulator \
             -destination "id=${{ steps.sim.outputs.udid }}" \
             -derivedDataPath build \
@@ -79,7 +79,7 @@ jobs:
 
       - name: 装进模拟器
         run: |
-          APP=$(find app/build/Build/Products/Debug-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
+          APP=$(find app/build/Build/Products/Release-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
           echo "app: $APP"
           test -n "$APP"
           xcrun simctl install "${{ steps.sim.outputs.udid }}" "$APP"
