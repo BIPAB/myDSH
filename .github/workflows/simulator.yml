@@ -116,32 +116,30 @@ jobs:
             echo "--- $f ---"; head -60 "$f"
           done
 
-      - name: 失败时把错误写回仓库（方便在仓库里直接看到）
+      - name: 把编译错误挂成注解（公开可读，助手能直接取到）
         if: failure()
         run: |
           {
-            echo "# 模拟器任务失败"
+            grep "error:" xcodebuild-sim.log 2>/dev/null | head -10
             echo ""
-            echo "## 编译错误"
-            echo '```'
-            grep -n "error:" xcodebuild-sim.log 2>/dev/null | head -40
-            echo '```'
-            echo ""
-            echo "## 构建日志尾部"
-            echo '```'
-            tail -60 xcodebuild-sim.log 2>/dev/null
-            echo '```'
-            echo ""
-            echo "## App 日志"
-            echo '```'
-            tail -40 app-log.txt 2>/dev/null
-            echo '```'
-          } > ci-error.txt
-          git config user.name "ci-bot"
-          git config user.email "ci@local"
-          git add ci-error.txt
-          git commit -m "ci: 模拟器任务失败日志 [skip ci]" || echo "没有变化"
-          git push || echo "推送失败（可能没有权限）"
+            echo "--- log tail ---"
+            tail -25 xcodebuild-sim.log 2>/dev/null
+          } > ci-error.txt || true
+          echo "=== 失败摘要 ==="
+          cat ci-error.txt || true
+
+          # 每条 error 变成一条注解（最多 10 条）
+          n=0
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            n=$((n+1))
+            [ $n -gt 10 ] && break
+            echo "::error title=err$n::$line"
+          done < <(grep "error:" xcodebuild-sim.log 2>/dev/null | head -10)
+
+          if [ $n -eq 0 ]; then
+            echo "::error title=no-error-lines::没找到 error: 行，见 artifact 里的 xcodebuild-sim.log"
+          fi
 
       - name: 上传截图和日志
         if: always()
