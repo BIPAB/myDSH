@@ -77,8 +77,10 @@ struct RootView: View {
     @EnvironmentObject private var devices: DeviceStore
     @AppStorage(ThemePreference.key) private var themePreference = ThemePreference.system
     private let connection = EngineConnection.shared
-    /// dsh://devices 打开设备面板（模拟器里点不了界面，用它来验证）
-    @State private var showDevices = false
+    /// 打开设备面板。两个入口：
+    ///   · 环境变量 DSH_SHOW_DEVICES=1（模拟器里没法点界面，靠它验证）
+    ///   · dsh://devices 深链（真机可用；模拟器会弹系统确认框）
+    @State private var showDevices = ProcessInfo.processInfo.environment["DSH_SHOW_DEVICES"] == "1"
 
     var body: some View {
         content

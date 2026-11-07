@@ -102,11 +102,13 @@ jobs:
           sleep 8
           xcrun simctl io "$UDID" screenshot shot-03.png
 
-          # 用 URL scheme 打开设备面板（模拟器里没法点界面）
-          xcrun simctl openurl "$UDID" "dsh://devices" || echo "openurl 失败"
-          sleep 3
+          # 设备面板：用环境变量重开一次（openurl 会弹系统确认框，点不了）
+          xcrun simctl terminate "$UDID" "$BUNDLE" || true
+          sleep 1
+          SIMCTL_CHILD_DSH_SHOW_DEVICES=1 xcrun simctl launch "$UDID" "$BUNDLE" || echo "重启动失败"
+          sleep 8
           xcrun simctl io "$UDID" screenshot shot-04-devices.png
-          sleep 2
+          sleep 4
           xcrun simctl io "$UDID" screenshot shot-05-devices.png
 
           kill "$(cat log.pid)" 2>/dev/null
