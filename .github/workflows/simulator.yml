@@ -147,7 +147,7 @@ jobs:
           # 侧栏（设备切换入口挪到这里了）
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
-          SIMCTL_CHILD_DSH_OPEN_DRAWER=1 xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" || echo "启动失败"
+          SIMCTL_CHILD_DSH_OPEN_DRAWER=1 SIMCTL_CHILD_DSH_WALLPAPER=1 xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" || echo "启动失败"
           sleep 8
           xcrun simctl io "$UDID" screenshot shot-07-drawer.png
 
