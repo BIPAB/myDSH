@@ -190,11 +190,11 @@ struct ConversationView: View {
                             ? .notification
                             : (model.running ? .typing
                                : (app.lastError != nil ? .error : .idle)),
-                        size: 96
+                        size: 68
                     )
-                    .padding(.trailing, 14)
-                    // 站在输入框后面：只露出头和肩，下半身被输入框挡住（参考 dsh-Go 的样式）
-                    .padding(.bottom, -50)
+                    .padding(.trailing, 16)
+                    // 素材本身就是半身像，完整显示即可；轻轻踩在输入框上沿
+                    .padding(.bottom, 2)
                 }
                 ComposerStatusBar(
                     model: model, keyboardUp: keyboardUp,
