@@ -615,7 +615,13 @@ final class ComposerModel {
                 goalActivation = (id, value["revision"].int ?? 0, activation != "disarmed")
             }
             if case .clear = action { clearedGoalId = goal.id }
+            // 目标状态卡片读的是 projection，服务端写入有先后：立刻刷一次，
+            // 再等半秒刷一次，避免出现"已经跑起来了但卡片还显示受阻"。
             session?.refreshProjections()
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(600))
+                session?.refreshProjections()
+            }
             return nil
         } catch {
             if let error = error as? EngineError { return "\(error.message) (\(error.code ?? ""))" }
