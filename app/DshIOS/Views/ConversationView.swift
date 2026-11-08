@@ -1326,7 +1326,7 @@ private struct UsageStatusLine: View {
     }
 
     var body: some View {
-        if !usage.isEmpty || contextTokens > 0 {
+        if !usage.isEmpty || (contextTokens ?? 0) > 0 {
             HStack(spacing: 5) {
                 Image(systemName: "internaldrive")
                     .font(.system(size: 9, weight: .medium))
