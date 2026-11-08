@@ -65,7 +65,7 @@ jobs:
           set -o pipefail
           xcodebuild -project DshIOS.xcodeproj \
             -scheme DshIOS \
-            -configuration Release \
+            -configuration Debug \
             -sdk iphonesimulator \
             -destination "id=${{ steps.sim.outputs.udid }}" \
             -derivedDataPath build \
@@ -79,7 +79,7 @@ jobs:
 
       - name: 装进模拟器
         run: |
-          APP=$(find app/build/Build/Products/Release-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
+          APP=$(find app/build/Build/Products/Debug-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
           echo "app: $APP"
           test -n "$APP"
           xcrun simctl install "${{ steps.sim.outputs.udid }}" "$APP"
@@ -119,6 +119,20 @@ jobs:
             xcrun simctl launch "$UDID" "$BUNDLE" || echo "启动失败"
           sleep 10
           xcrun simctl io "$UDID" screenshot shot-08-conversation.png
+
+          # 示例时间线（Debug 专属）：不依赖任何会话，直接看气泡
+          xcrun simctl terminate "$UDID" "$BUNDLE" || true
+          sleep 1
+          xcrun simctl launch "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
+          sleep 8
+          xcrun simctl io "$UDID" screenshot shot-10-fixture.png
+
+          # 示例时间线 + 壁纸
+          xcrun simctl terminate "$UDID" "$BUNDLE" || true
+          sleep 1
+          SIMCTL_CHILD_DSH_WALLPAPER=1 xcrun simctl launch "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
+          sleep 8
+          xcrun simctl io "$UDID" screenshot shot-11-fixture-wallpaper.png
 
           # 壁纸 + 对话：验证材质气泡在花背景上是否清楚
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
