@@ -16,6 +16,12 @@ struct DshIOSApp: App {
     @StateObject private var devices = DeviceStore.shared
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        // 预热：它会写 "wallpaper.enabled" 标记，而 Palette.background 在视图求值时
+        // 就读这个标记 —— 晚一步的话壁纸会被不透明背景盖住。
+        _ = WallpaperStore.shared
+    }
+
     var body: some Scene {
         WindowGroup(id: Self.window, for: SessionWindow.self) { $window in
             RootView(session: window?.session)
