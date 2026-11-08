@@ -85,7 +85,7 @@ struct DrawerView: View {
                 deviceRow
                 settingsRow
             }
-            .background(Palette.background)
+            .background(WallpaperBackground(store: WallpaperStore.shared))
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: Route.self) { _ in archivedPage }
         }

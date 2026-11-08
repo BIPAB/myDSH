@@ -172,7 +172,7 @@ struct ConversationView: View {
                 }
             }
         }
-        .background(Palette.background)
+        .background(WallpaperBackground(store: WallpaperStore.shared))
         .overlay { if blank { hero(model) } }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(alignment: .leading, spacing: 0) {

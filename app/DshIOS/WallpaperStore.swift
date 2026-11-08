@@ -108,3 +108,24 @@ struct WallpaperLayer: View {
         .allowsHitTesting(false)
     }
 }
+
+/// 对话区/侧栏用的背景：有壁纸就画图，没有就用原来的纯色。
+///
+/// 直接画在内容自己身上，而不是铺在窗口最底层 —— 因为界面里有大量不透明背景，
+/// 铺在最底层会被全部盖住（这就是之前一直看不到壁纸的原因）。
+struct WallpaperBackground: View {
+    @ObservedObject var store: WallpaperStore
+
+    var body: some View {
+        if let image = store.image {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .overlay(Color(uiColor: .systemBackground).opacity(0.55))  // 压暗，保证文字对比度
+                .clipped()
+                .ignoresSafeArea()
+        } else {
+            Palette.background
+        }
+    }
+}
