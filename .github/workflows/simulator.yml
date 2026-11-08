@@ -111,6 +111,14 @@ jobs:
           sleep 4
           xcrun simctl io "$UDID" screenshot shot-05-devices.png
 
+          # 打开一个真实会话，看气泡效果
+          xcrun simctl terminate "$UDID" "$BUNDLE" || true
+          sleep 1
+          SIMCTL_CHILD_DSH_SESSION=session-263c073d-41a5-4b1e-a141-2941fb6d7d12 \
+            xcrun simctl launch "$UDID" "$BUNDLE" || echo "启动失败"
+          sleep 10
+          xcrun simctl io "$UDID" screenshot shot-08-conversation.png
+
           # 侧栏（设备切换入口挪到这里了）
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1

@@ -14,7 +14,8 @@ struct MainView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
     @AppStorage("dsh.currentWorkspace") private var workspaceId = ""
-    @State private var selection: String?
+    // 测试钩子：DSH_SESSION=<id> 直接打开某个会话（模拟器里没法点列表）
+    @State private var selection: String? = ProcessInfo.processInfo.environment["DSH_SESSION"]
     @State private var sheet: Sheet?
     /// In regular width the plugin store takes the conversation's place beside the sidebar.
     @State private var storeOpen = false
