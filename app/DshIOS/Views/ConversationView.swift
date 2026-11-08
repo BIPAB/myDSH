@@ -183,7 +183,8 @@ struct ConversationView: View {
                 size: 76
             )
             .padding(.trailing, 10)
-            .offset(y: max(0, app.composerHeight * 0.42))
+            // 只往下压一点点：身体搭在输入框上沿，脸完全露出来（趴在对话框上）
+            .offset(y: 6)
             .allowsHitTesting(false)
         }
         .overlay { if blank { hero(model) } }
