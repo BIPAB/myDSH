@@ -69,7 +69,8 @@ final class DeviceStore: ObservableObject {
         if let stored, list.contains(where: { $0.id == stored }) {
             picked = stored
         } else {
-            picked = list.first?.id ?? "pc1"
+            // 云电脑 24 小时在线，默认用它；找不到才退回第一台
+            picked = list.first(where: { $0.id == "pc3" })?.id ?? list.first?.id ?? "pc1"
         }
 
         self.devices = list
