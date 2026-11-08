@@ -195,6 +195,8 @@ struct ConversationView: View {
                         sheetUp: $inputSheetUp
                     )
                     .allowsHitTesting(presentedInteractionId(model) == nil)
+                    // 用量状态行：和网页版一样贴在输入框下方
+                    UsageStatusLine(usage: app.usageTotal, running: model.running)
                 }
             }
             .padding(.horizontal, 12)
@@ -1283,5 +1285,45 @@ private struct CommandBlock: View {
                 Text("内容较长，滑动查看全部").font(.caption).foregroundStyle(Palette.secondary)
             }
         }
+    }
+}
+
+
+/// 输入框下方那行用量：`617M tok · 缓存命中 99%`。
+///
+/// 数据来自 `/api/session/list` 的 `tokenUsage`（四个计数器），AppModel 汇总所有会话。
+/// 轮/步/tok-s 需要从事件流累计，这一版先不做。
+private struct UsageStatusLine: View {
+    let usage: TokenUsage
+    let running: Bool
+
+    var body: some View {
+        if !usage.isEmpty {
+            HStack(spacing: 5) {
+                Image(systemName: "internaldrive")
+                    .font(.system(size: 9, weight: .medium))
+                Text(Self.amount(usage.total) + " tok")
+                if let rate = usage.cacheHitRate {
+                    Text("· 缓存命中 \(Int((rate * 100).rounded()))%")
+                }
+                Spacer(minLength: 0)
+                if running {
+                    ProgressView().controlSize(.mini).scaleEffect(0.7)
+                }
+            }
+            .font(.caption2)
+            .foregroundStyle(Palette.secondary)
+            .padding(.horizontal, 4)
+            .padding(.top, 5)
+            .accessibilityElement(children: .combine)
+        }
+    }
+
+    /// 617000000 → 617M；再大就 B。
+    static func amount(_ n: Int) -> String {
+        if n >= 1_000_000_000 { return String(format: "%.1fB", Double(n) / 1_000_000_000) }
+        if n >= 1_000_000 { return String(format: "%.0fM", Double(n) / 1_000_000) }
+        if n >= 1_000 { return String(format: "%.0fK", Double(n) / 1_000) }
+        return "\(n)"
     }
 }
