@@ -3,7 +3,13 @@ import SwiftUI
 /// Design tokens (docs/design/README.md §3). Each is a Color Set in
 /// Assets.xcassets with a light and a dark value; views use only these names.
 enum Palette {
-    static let background = Color("Background")
+    /// 有自定义壁纸时让背景半透明，壁纸才能从 138 处不透明背景后面透出来。
+    /// 只调不透明度，不动任何文字颜色 —— 可读性由材质气泡保证。
+    static var background: Color {
+        UserDefaults.standard.bool(forKey: "wallpaper.enabled")
+            ? Color("Background").opacity(0.72)
+            : Color("Background")
+    }
     static let ink = Color("Ink")
     static let onInk = Color("OnInk")
     static let secondary = Color("TextSecondary")

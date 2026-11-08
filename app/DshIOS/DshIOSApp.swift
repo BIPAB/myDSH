@@ -105,6 +105,7 @@ struct RootView: View {
 
     var body: some View {
         content
+            .background { WallpaperLayer(store: WallpaperStore.shared) }
             .background(WindowAppearance(style: ThemePreference.style(themePreference)))
             .sheet(isPresented: $showDevices) {
                 DeviceSwitcher().environmentObject(devices)
