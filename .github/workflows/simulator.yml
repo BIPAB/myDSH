@@ -126,9 +126,14 @@ jobs:
           if [ -n "$CONTAINER" ]; then
             WPDIR="$CONTAINER/Library/Application Support/dsh-ios/wallpaper"
             mkdir -p "$WPDIR"
-            SRC=$(find app/DshIOS/Assets.xcassets -name "*.png" | head -1)
-            echo "src image: $SRC"
-            cp "$SRC" "$WPDIR/current.jpg"
+            # 用服务器上那张彩色的鲸鱼娘当测试壁纸，一眼能看出有没有铺上去
+            curl -sk --max-time 30 -o "$WPDIR/current.jpg" \
+              "https://dsh.spqrbipab.site:8443/hub/pet-whale-girl.png" || true
+            ls -l "$WPDIR/current.jpg" || echo "下载失败，退回本地图"
+            if [ ! -s "$WPDIR/current.jpg" ]; then
+              SRC=$(find app/DshIOS/Assets.xcassets -name "*.png" | head -1)
+              cp "$SRC" "$WPDIR/current.jpg"
+            fi
             ls -l "$WPDIR"
           fi
           xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"

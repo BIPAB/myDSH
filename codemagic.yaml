@@ -8,11 +8,13 @@ workflows:
       vars:
         SCHEME: DshIOS
         BUNDLE_ID: com.wsw.dsh-remote
-    triggering:
-      events: [push]
-      branch_patterns:
-        - pattern: main
-          include: true
+    # 只在手动点「Start new build」时构建：开发期的测试提交不消耗额度。
+    # 需要自动出包时，把下面两行取消注释即可。
+    # triggering:
+    #   events: [push]
+    #   branch_patterns:
+    #     - pattern: main
+    #       include: true
     scripts:
       - name: 工具
         script: |
