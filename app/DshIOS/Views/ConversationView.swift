@@ -180,7 +180,7 @@ struct ConversationView: View {
                     ? .notification
                     : (model.running ? .typing
                        : (app.lastError != nil ? .error : .idle)),
-                size: 76
+                size: 56
             )
             .padding(.trailing, 10)
             // 只往下压一点点：身体搭在输入框上沿，脸完全露出来（趴在对话框上）
