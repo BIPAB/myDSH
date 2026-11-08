@@ -82,6 +82,13 @@ private struct GIFView: UIViewRepresentable {
             view.startAnimating()
         }
     }
+
+    /// 关键：不实现这个的话，SwiftUI 会按 UIImageView 的固有尺寸（GIF 原图 552×528）
+    /// 去测量，外层的 .frame 只约束了容器，图片本身不缩小 —— 表现为桌宠铺满半屏。
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UIImageView, context: Context) -> CGSize? {
+        let side = min(proposal.width ?? 68, proposal.height ?? 68)
+        return CGSize(width: side, height: side)
+    }
 }
 
 /// 桌宠本体：对话区右下角、输入框上方。
