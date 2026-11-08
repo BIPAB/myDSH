@@ -192,9 +192,9 @@ struct ConversationView: View {
                                : (app.lastError != nil ? .error : .idle)),
                         size: 68
                     )
-                    .padding(.trailing, 16)
-                    // 素材本身就是半身像，完整显示即可；轻轻踩在输入框上沿
-                    .padding(.bottom, 2)
+                    .padding(.trailing, 48)
+                    // 素材底部自带透明留白，用负值让它真正贴住输入框上边线
+                    .padding(.bottom, -6)
                 }
                 ComposerStatusBar(
                     model: model, keyboardUp: keyboardUp,

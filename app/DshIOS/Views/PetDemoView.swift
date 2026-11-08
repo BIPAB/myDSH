@@ -53,8 +53,8 @@ struct PetDemoView: View {
         HStack(alignment: .bottom) {
             Spacer(minLength: 0)
             PetView(state: .idle, size: 68)
-                .padding(.trailing, 16)
-                .padding(.bottom, 2)
+                .padding(.trailing, 48)
+                .padding(.bottom, -6)
         }
     }
 
