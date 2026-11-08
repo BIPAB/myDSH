@@ -82,7 +82,11 @@ final class EngineConnection {
         let model = AppModel(launchURL: url, extraCookie: extraCookie)
         // 截图验证专用：DSH_FIXTURE=1 时完全不连服务器，直接进界面，
         // 由 -dshOpen timeline 用本地假数据渲染对话页（避免跨境网络导致截图停在连接中）。
-        if ProcessInfo.processInfo.environment["DSH_FIXTURE"] == "1" {
+        // 两条通道都支持：启动参数 -dshFixture 1（UserDefaults，已验证可靠）
+        // 或环境变量 DSH_FIXTURE=1。
+        let fixtureMode = UserDefaults.standard.bool(forKey: "dshFixture")
+            || ProcessInfo.processInfo.environment["DSH_FIXTURE"] == "1"
+        if fixtureMode {
             app = model
             return
         }
