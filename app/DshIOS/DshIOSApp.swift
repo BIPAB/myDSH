@@ -84,8 +84,12 @@ final class EngineConnection {
         // 由 -dshOpen timeline 用本地假数据渲染对话页（避免跨境网络导致截图停在连接中）。
         // 两条通道都支持：启动参数 -dshFixture 1（UserDefaults，已验证可靠）
         // 或环境变量 DSH_FIXTURE=1。
-        let fixtureMode = UserDefaults.standard.bool(forKey: "dshFixture")
+        let defaults = UserDefaults.standard
+        let argValue = defaults.string(forKey: "dshFixture") ?? ""
+        let fixtureMode = defaults.bool(forKey: "dshFixture")
+            || argValue == "1" || argValue.lowercased() == "yes" || argValue.lowercased() == "true"
             || ProcessInfo.processInfo.environment["DSH_FIXTURE"] == "1"
+            || CommandLine.arguments.contains("-dshFixture")
         if fixtureMode {
             app = model
             return
