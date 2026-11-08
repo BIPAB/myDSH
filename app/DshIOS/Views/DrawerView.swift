@@ -25,6 +25,8 @@ struct DrawerView: View {
 
     @Environment(AppModel.self) private var app
     @EnvironmentObject private var engine: NodeEngine
+    @EnvironmentObject private var devices: DeviceStore
+    @State private var showDevices = false
     let selection: String?
     /// Where a new conversation from the top button goes: the current session's workspace.
     let workspace: Workspace?
@@ -80,6 +82,7 @@ struct DrawerView: View {
                 .sessionList()
                 .refreshable { await app.refreshSessions() }
 
+                deviceRow
                 settingsRow
             }
             .background(Palette.background)
@@ -204,6 +207,44 @@ struct DrawerView: View {
     /// automations (also in settings), the Cordis panel, signing in.
     /// Signed in, the row carries the account as the web sidebar's account button does:
     /// Platform's picture and `name ?? contact`. The engine shows only when it is not running.
+    /// 当前设备 + 切换入口（原来是贴在界面右侧的浮层胶囊，挪进侧栏了）。
+    private var deviceRow: some View {
+        Button {
+            showDevices = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: devices.current.id == "pc3" ? "cloud" : "desktopcomputer")
+                    .font(.system(size: 16))
+                    .frame(width: 24)
+                    .foregroundStyle(Palette.ink.opacity(0.75))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("设备")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Palette.ink)
+                    Text(devices.current.name)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 9)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .overlay(alignment: .top) { Divider() }
+        .sheet(isPresented: $showDevices) {
+            DeviceSwitcher()
+                .environmentObject(devices)
+                .presentationDetents([.height(320), .medium])
+                .presentationDragIndicator(.visible)
+        }
+    }
+
     private var settingsRow: some View {
         Menu {
             Button(action: openSettings) { Label("设置", systemImage: "gearshape") }

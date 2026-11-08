@@ -23,7 +23,7 @@ struct MainView: View {
     @State private var sidebar = NavigationSplitViewVisibility.all
     @State private var windowWidth: CGFloat = 0
     @State private var searchRequest = 0
-    @State private var drawerOpen = false
+    @State private var drawerOpen = ProcessInfo.processInfo.environment["DSH_OPEN_DRAWER"] == "1"
     @State private var drag: CGFloat = 0
     /// The way a drag on the shell set off, fixed by its first move; nil between drags.
     @GestureState private var dragAxis: Axis?

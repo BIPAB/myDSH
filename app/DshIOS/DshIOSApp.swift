@@ -104,7 +104,6 @@ struct RootView: View {
                     MainView(session: session)
                         .environment(app)
                         .environmentObject(devices)
-                        .overlay(alignment: .topTrailing) { DeviceChip(store: devices).padding(.top, 56) }
                 } else {
                     StartupView(message: String(localized: "正在连接 \(devices.current.name)…"))
                         .environmentObject(devices)
