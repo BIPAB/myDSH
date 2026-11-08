@@ -120,6 +120,21 @@ jobs:
           sleep 10
           xcrun simctl io "$UDID" screenshot shot-08-conversation.png
 
+          # 壁纸（真实路径）：把一张图直接放进 App 沙盒，再启动
+          CONTAINER=$(xcrun simctl get_app_container "$UDID" "$BUNDLE" data 2>/dev/null || true)
+          echo "container: $CONTAINER"
+          if [ -n "$CONTAINER" ]; then
+            WPDIR="$CONTAINER/Library/Application Support/dsh-ios/wallpaper"
+            mkdir -p "$WPDIR"
+            SRC=$(find app/DshIOS/Assets.xcassets -name "*.png" | head -1)
+            echo "src image: $SRC"
+            cp "$SRC" "$WPDIR/current.jpg"
+            ls -l "$WPDIR"
+          fi
+          xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
+          sleep 10
+          xcrun simctl io "$UDID" screenshot shot-12-real-wallpaper.png
+
           # 示例时间线（Debug 专属）：不依赖任何会话，直接看气泡
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1

@@ -56,9 +56,7 @@ struct SettingsView: View {
                             Text("深色").tag("dark")
                         }
                     }
-                    // 壁纸入口暂时隐藏：渲染链路在模拟器里没能验证通过（背景始终黑），
-                    // 代码保留在 WallpaperStore.swift，确认可用后取消注释即可。
-                    // wallpaperRow
+                    wallpaperRow
                     // iOS sets an app's language in its own Settings page; an app cannot switch it while running.
                     linkRow("语言", AppLanguage.name, URL(string: UIApplication.openSettingsURLString)!)
                 }
