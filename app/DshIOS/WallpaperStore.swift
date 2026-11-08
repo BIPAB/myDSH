@@ -28,7 +28,35 @@ final class WallpaperStore: ObservableObject {
 
     private init() {
         image = Self.loadFromDisk()
+        // 模拟器验证用：DSH_WALLPAPER=1 时临时生成一张花哨的图（不落盘）
+        if image == nil,
+           ProcessInfo.processInfo.environment["DSH_WALLPAPER"] == "1" {
+            image = Self.makeTestWallpaper()
+        }
         UserDefaults.standard.set(image != nil, forKey: Self.flagKey)
+    }
+
+    /// 只为截图验证：一张有明显图案的壁纸，用来看材质气泡够不够清楚。
+    private static func makeTestWallpaper() -> UIImage? {
+        let size = CGSize(width: 1200, height: 2400)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { ctx in
+            let colors = [UIColor(red: 0.15, green: 0.35, blue: 0.85, alpha: 1).cgColor,
+                          UIColor(red: 0.85, green: 0.25, blue: 0.45, alpha: 1).cgColor,
+                          UIColor(red: 0.95, green: 0.65, blue: 0.15, alpha: 1).cgColor]
+            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                      colors: colors as CFArray, locations: [0, 0.55, 1])!
+            ctx.cgContext.drawLinearGradient(gradient, start: .zero,
+                                             end: CGPoint(x: size.width, y: size.height), options: [])
+            // 一堆圆点，模拟"花背景"
+            for i in 0..<40 {
+                let r = CGFloat(20 + (i * 37) % 90)
+                let x = CGFloat((i * 311) % Int(size.width))
+                let y = CGFloat((i * 547) % Int(size.height))
+                UIColor.white.withAlphaComponent(0.18).setFill()
+                ctx.cgContext.fillEllipse(in: CGRect(x: x, y: y, width: r, height: r))
+            }
+        }
     }
 
     private static func loadFromDisk() -> UIImage? {
