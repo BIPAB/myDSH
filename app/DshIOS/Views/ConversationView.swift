@@ -173,24 +173,23 @@ struct ConversationView: View {
             }
         }
         .background(WallpaperBackground(store: WallpaperStore.shared))
-        // 桌宠：右下角，半身藏在输入框后面（composerHeight 是输入区实测高度）
-        .overlay(alignment: .bottomTrailing) {
-            PetView(
-                state: waitingInteraction(model) != nil
-                    ? .notification
-                    : (model.running ? .typing
-                       : (app.lastError != nil ? .error : .idle)),
-                size: 56
-            )
-            .padding(.trailing, 10)
-            // 只往下压一点点：身体搭在输入框上沿，脸完全露出来（趴在对话框上）
-            .offset(y: 6)
-            .allowsHitTesting(false)
-        }
         .overlay { if blank { hero(model) } }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(alignment: .leading, spacing: 0) {
                 if blank && !composerFocused && model.composer.isEmpty { suggestions(model).padding(.bottom, 10) }
+                // 桌宠：占一行（计入底部高度，会话区被顶上去），靠右，底部压住输入框 6pt
+                HStack(alignment: .bottom) {
+                    Spacer(minLength: 0)
+                    PetView(
+                        state: waitingInteraction(model) != nil
+                            ? .notification
+                            : (model.running ? .typing
+                               : (app.lastError != nil ? .error : .idle)),
+                        size: 64
+                    )
+                    .padding(.trailing, 8)
+                    .padding(.bottom, -6)
+                }
                 ComposerStatusBar(
                     model: model, keyboardUp: keyboardUp,
                     waiting: waitingInteraction(model).map { $0.isApproval ? String(localized: "等你允许") : String(localized: "等你回答") },
