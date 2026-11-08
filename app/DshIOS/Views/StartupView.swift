@@ -33,6 +33,8 @@ struct EngineTrouble: View {
     let headline: String
     let since: Date?
     let logFile: URL
+    /// 可选：给一个「重试」按钮（远程连接失败时用）
+    var retry: (() -> Void)? = nil
 
     @State private var copied = false
 
@@ -76,6 +78,15 @@ struct EngineTrouble: View {
                         .font(.footnote)
                 }
                 .buttonStyle(.bordered)
+
+                if let retry {
+                    Button {
+                        retry()
+                    } label: {
+                        Label("重试", systemImage: "arrow.clockwise").font(.footnote)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
             .padding(.top, 4)
         }

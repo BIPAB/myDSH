@@ -178,7 +178,7 @@ final class AppModel {
 
     func connect() async {
         do {
-            try await client.authenticate()
+            try await authenticateWithRetry()
             _ = try? await client.call("workspace/initializeDefault")
             await refreshSessions()
             await reloadTheme()
@@ -190,8 +190,44 @@ final class AppModel {
             BackgroundKeeper.shared.attach { [weak self] in await self?.refreshSessions() }
             LiveActivityController.shared.attach(self)
         } catch {
-            lastError = error.localizedDescription
+            lastError = Self.friendly(error)
         }
+    }
+
+    /// 认证失败自动重试：1s / 3s / 6s。冷启动、隧道刚连上时经常会失败一次。
+    private func authenticateWithRetry() async throws {
+        let delays: [UInt64] = [1, 3, 6]
+        var attempt = 0
+        while true {
+            do {
+                try await client.authenticate()
+                if attempt > 0 { lastError = nil }
+                return
+            } catch {
+                if attempt >= delays.count { throw error }
+                lastError = "正在重试连接（\(attempt + 1)/\(delays.count)）…"
+                try? await Task.sleep(nanoseconds: delays[attempt] * 1_000_000_000)
+                attempt += 1
+            }
+        }
+    }
+
+    /// 把引擎的原始错误翻成人话。
+    static func friendly(_ error: Error) -> String {
+        let raw = error.localizedDescription
+        if raw.contains("登录令牌") || raw.contains("AUTH") {
+            return "连不上这台电脑。检查：①那台机器开着吗 ②DSH 窗口还在吗 ③隧道连上了吗"
+        }
+        if raw.contains("超时") || raw.lowercased().contains("timed out") || raw.contains("timeout") {
+            return "请求超时。网络不通，或者那台电脑正在忙。"
+        }
+        if raw.contains("证书") || raw.contains("SSL") || raw.lowercased().contains("certificate") {
+            return "安全连接失败（证书校验没过）。"
+        }
+        if raw.contains("离线") || raw.contains("offline") || raw.contains("not connected") {
+            return "那台电脑不在线。"
+        }
+        return raw
     }
 
     /// Sessions of one workspace (nil: those in no workspace), as the web sidebar

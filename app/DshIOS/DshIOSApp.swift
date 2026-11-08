@@ -48,7 +48,11 @@ final class EngineConnection {
     static let shared = EngineConnection()
 
     private(set) var app: AppModel?
+    /// 连不上时的错误说明（人话），有值时界面显示错误页 + 重试按钮
+    private(set) var error: String?
     @ObservationIgnored private var generation: String?
+    @ObservationIgnored private var lastURL: URL?
+    @ObservationIgnored private var lastCookie: String?
 
     /// 本机引擎（原逻辑）：generation 用引擎重启序号
     func connect(to url: URL, generation current: Int) async {
@@ -66,9 +70,25 @@ final class EngineConnection {
         guard current != generation else { return }
         generation = current
         app = nil                      // 先把旧连接摘掉，界面会回到"正在连接…"
+        error = nil
+        lastURL = url
+        lastCookie = extraCookie
         let model = AppModel(launchURL: url, extraCookie: extraCookie)
         await model.connect()
-        if current == generation { app = model }
+        guard current == generation else { return }
+        if let message = model.lastError {
+            error = message              // 连不上：不留 app，界面显示错误页
+        } else {
+            app = model
+        }
+    }
+
+    /// 错误页上的「重试」：重新连一次当前设备。
+    func retry() async {
+        guard let url = lastURL else { return }
+        let generation = generation ?? ""
+        self.generation = nil            // 允许同样的 generation 再连一次
+        await connect(to: url, extraCookie: lastCookie, generation: generation)
     }
 }
 
@@ -101,7 +121,15 @@ struct RootView: View {
         if devices.currentLaunchURL != nil {
             // ---- 远程模式：不碰本机引擎 ----
             Group {
-                if let app = connection.app {
+                if let message = connection.error {
+                    EngineTrouble(
+                        headline: message,
+                        since: nil,
+                        logFile: EnginePaths.data.appendingPathComponent("connect.log"),
+                        retry: { Task { await connection.retry() } }
+                    )
+                    .environmentObject(devices)
+                } else if let app = connection.app {
                     MainView(session: session)
                         .environment(app)
                         .environmentObject(devices)
