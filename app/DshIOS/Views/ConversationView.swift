@@ -80,8 +80,13 @@ struct ConversationView: View {
             case "workbench": openWorkbench(.terminal)
             case "approval": demoApproval = PendingApproval(id: "demo", toolName: "bash", callId: nil, reason: "允许本次操作使用 danger-full-access 权限：当前处于 workspace-write 模式，写不到工作区以外。这条命令会删除 build/ 下约 1.4 GB 的文件，再重新下载依赖，失败时不会自动恢复，需要手动重新构建一次才能继续。")
             case "timeline":
-                try? await Task.sleep(for: .seconds(2))
-                model?.debugLoadFixture(TimelineFixture.events)
+                // 等 model 真的建好再灌假数据（之前固定等 2 秒，model 还没就绪就跳过了）
+                for _ in 0..<40 {
+                    if model != nil { break }
+                    try? await Task.sleep(for: .milliseconds(200))
+                }
+                guard let model else { return }
+                model.debugLoadFixture(TimelineFixture.events)
             default: break
             }
         }
