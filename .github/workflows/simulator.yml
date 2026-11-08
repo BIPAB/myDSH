@@ -114,6 +114,7 @@ jobs:
           # 打开一个真实会话，看气泡效果
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
+          SIMCTL_CHILD_DSH_DEVICE=pc1 \
           SIMCTL_CHILD_DSH_SESSION=session-263c073d-41a5-4b1e-a141-2941fb6d7d12 \
             xcrun simctl launch "$UDID" "$BUNDLE" || echo "启动失败"
           sleep 10
