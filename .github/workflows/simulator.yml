@@ -137,21 +137,21 @@ jobs:
             ls -l "$WPDIR"
           fi
           xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
-          sleep 10
+          sleep 22
           xcrun simctl io "$UDID" screenshot shot-12-real-wallpaper.png
 
           # 示例时间线（Debug 专属）：不依赖任何会话，直接看气泡
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
           xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
-          sleep 8
+          sleep 22
           xcrun simctl io "$UDID" screenshot shot-10-fixture.png
 
           # 示例时间线 + 壁纸
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
           SIMCTL_CHILD_DSH_WALLPAPER=1 xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
-          sleep 8
+          sleep 22
           xcrun simctl io "$UDID" screenshot shot-11-fixture-wallpaper.png
 
           # 壁纸 + 对话：验证材质气泡在花背景上是否清楚
