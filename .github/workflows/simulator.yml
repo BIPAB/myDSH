@@ -150,8 +150,9 @@ jobs:
           # 示例时间线 + 壁纸
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
-          SIMCTL_CHILD_DSH_WALLPAPER=1 xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
-          sleep 60
+          SIMCTL_CHILD_DSH_FIXTURE=1 SIMCTL_CHILD_DSH_WALLPAPER=1 \
+            xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
+          sleep 12
           xcrun simctl io "$UDID" screenshot shot-11-fixture-wallpaper.png
 
           # 壁纸 + 对话：验证材质气泡在花背景上是否清楚
