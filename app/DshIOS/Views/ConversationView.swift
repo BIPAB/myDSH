@@ -177,6 +177,17 @@ struct ConversationView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(alignment: .leading, spacing: 0) {
                 if blank && !composerFocused && model.composer.isEmpty { suggestions(model).padding(.bottom, 10) }
+                // 桌宠：贴在输入框上方、右对齐。状态由当前情况决定。
+                HStack {
+                    Spacer()
+                    PetView(
+                        state: waitingInteraction(model) != nil
+                            ? .notification
+                            : (model.running ? .typing : .sleeping),
+                        size: 72
+                    )
+                }
+                .padding(.bottom, 2)
                 ComposerStatusBar(
                     model: model, keyboardUp: keyboardUp,
                     waiting: waitingInteraction(model).map { $0.isApproval ? String(localized: "等你允许") : String(localized: "等你回答") },
