@@ -93,7 +93,7 @@ jobs:
           ( xcrun simctl spawn "$UDID" log stream --style compact \
               --predicate "process == \"DshIOS\"" > app-log.txt 2>&1 & echo $! > log.pid )
 
-          xcrun simctl launch "$UDID" "$BUNDLE" || echo "launch 返回非零"
+          xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" || echo "launch 返回非零"
 
           sleep 6
           xcrun simctl io "$UDID" screenshot shot-01-launch.png
@@ -105,7 +105,7 @@ jobs:
           # 设备面板：用环境变量重开一次（openurl 会弹系统确认框，点不了）
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
-          SIMCTL_CHILD_DSH_SHOW_DEVICES=1 xcrun simctl launch "$UDID" "$BUNDLE" || echo "重启动失败"
+          SIMCTL_CHILD_DSH_SHOW_DEVICES=1 xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" || echo "重启动失败"
           sleep 8
           xcrun simctl io "$UDID" screenshot shot-04-devices.png
           sleep 4
@@ -116,21 +116,21 @@ jobs:
           sleep 1
           SIMCTL_CHILD_DSH_DEVICE=pc1 \
           SIMCTL_CHILD_DSH_SESSION=session-263c073d-41a5-4b1e-a141-2941fb6d7d12 \
-            xcrun simctl launch "$UDID" "$BUNDLE" || echo "启动失败"
+            xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" || echo "启动失败"
           sleep 10
           xcrun simctl io "$UDID" screenshot shot-08-conversation.png
 
           # 示例时间线（Debug 专属）：不依赖任何会话，直接看气泡
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
-          xcrun simctl launch "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
+          xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
           sleep 8
           xcrun simctl io "$UDID" screenshot shot-10-fixture.png
 
           # 示例时间线 + 壁纸
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
-          SIMCTL_CHILD_DSH_WALLPAPER=1 xcrun simctl launch "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
+          SIMCTL_CHILD_DSH_WALLPAPER=1 xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshOpen timeline || echo "启动失败"
           sleep 8
           xcrun simctl io "$UDID" screenshot shot-11-fixture-wallpaper.png
 
@@ -140,21 +140,21 @@ jobs:
           SIMCTL_CHILD_DSH_DEVICE=pc1 \
           SIMCTL_CHILD_DSH_SESSION=session-263c073d-41a5-4b1e-a141-2941fb6d7d12 \
           SIMCTL_CHILD_DSH_WALLPAPER=1 \
-            xcrun simctl launch "$UDID" "$BUNDLE" || echo "启动失败"
+            xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" || echo "启动失败"
           sleep 10
           xcrun simctl io "$UDID" screenshot shot-09-wallpaper.png
 
           # 侧栏（设备切换入口挪到这里了）
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
-          SIMCTL_CHILD_DSH_OPEN_DRAWER=1 xcrun simctl launch "$UDID" "$BUNDLE" || echo "启动失败"
+          SIMCTL_CHILD_DSH_OPEN_DRAWER=1 xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" || echo "启动失败"
           sleep 8
           xcrun simctl io "$UDID" screenshot shot-07-drawer.png
 
           # 切到一台离线的设备（PC2），看错误处理
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
-          SIMCTL_CHILD_DSH_DEVICE=pc3 xcrun simctl launch "$UDID" "$BUNDLE" || echo "重启动失败"
+          SIMCTL_CHILD_DSH_DEVICE=pc3 xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" || echo "重启动失败"
           sleep 10
           xcrun simctl io "$UDID" screenshot shot-06-switch-pc3.png
 
