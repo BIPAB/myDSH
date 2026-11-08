@@ -110,9 +110,13 @@ struct RootView: View {
     @State private var showDevices = ProcessInfo.processInfo.environment["DSH_SHOW_DEVICES"] == "1"
 
     var body: some View {
-        content
-            .background { WallpaperLayer(store: WallpaperStore.shared) }
-            .background(WindowAppearance(style: ThemePreference.style(themePreference)))
+        // 用 ZStack 明确层次：壁纸在最底层，界面盖在上面。
+        // （之前用 .background 依赖求值顺序，壁纸可能被不透明背景顶掉。）
+        ZStack {
+            WallpaperLayer(store: WallpaperStore.shared)
+            content
+        }
+        .background(WindowAppearance(style: ThemePreference.style(themePreference)))
             .sheet(isPresented: $showDevices) {
                 DeviceSwitcher().environmentObject(devices)
                     .presentationDetents([.height(320), .medium])
