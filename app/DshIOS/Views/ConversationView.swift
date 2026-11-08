@@ -1084,7 +1084,13 @@ private struct BlockView: View, Equatable {
         case .reasoning(let id, let text):
             ReasoningView(id: id, text: text, live: live)
         case .text(_, let text):
+            // 气泡：材质会模糊它下面的壁纸/背景，文字对比度不受背景影响。
+            // 只包文字块；工具卡片、思考、图片各有自己的样式，保持原样。
             MarkdownView(text: text, cached: !live, linksFiles: closing, selectable: false)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .frame(maxWidth: .infinity, alignment: .leading)
         case .tool(let call):
             ToolCallView(call: call, live: live)
         case .image(_, let attachment):
