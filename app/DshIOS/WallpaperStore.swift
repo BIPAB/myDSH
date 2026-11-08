@@ -87,6 +87,13 @@ struct WallpaperLayer: View {
 
     var body: some View {
         GeometryReader { proxy in
+            // 诊断：DSH_WALLPAPER=1 但没图时画一条红条，用来区分"图层没渲染"和"被上层盖住"
+            if store.image == nil, ProcessInfo.processInfo.environment["DSH_WALLPAPER"] == "1" {
+                VStack {
+                    Color.red.frame(height: 8)
+                    Spacer()
+                }
+            }
             if let image = store.image {
                 Image(uiImage: image)
                     .resizable()
