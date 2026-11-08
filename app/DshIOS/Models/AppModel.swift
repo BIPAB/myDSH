@@ -34,6 +34,8 @@ struct SessionSummary: Identifiable, Hashable {
     var migrationRequired: Bool
     /// The cached projections the list carries (`subagent`, `agentPreset`…).
     var projections: JSON
+    /// 这个会话累计的 token 用量（网页版底部那行数字的来源）
+    var tokenUsage: TokenUsage
 
     init(_ json: JSON) {
         id = json["sessionId"].string ?? ""
@@ -47,9 +49,50 @@ struct SessionSummary: Identifiable, Hashable {
         agentAvailable = json["agentAvailable"].bool ?? false
         migrationRequired = json["formatStatus"].string == "migration-required"
         projections = json["projections"]["values"]
+        tokenUsage = TokenUsage(projections["tokenUsage"])
     }
 
     var displayTitle: String { title?.isEmpty == false ? title! : String(localized: "新会话") }
+}
+
+/// 一次会话（或全部会话合计）的 token 用量。
+///
+/// 对应 DSH 的 `projections.values.tokenUsage`：
+///   uncachedInputTokens / outputTokens / cacheReadTokens / cacheWriteTokens
+struct TokenUsage: Hashable {
+    var uncachedInput = 0
+    var output = 0
+    var cacheRead = 0
+    var cacheWrite = 0
+
+    init() {}
+
+    init(_ json: JSON) {
+        uncachedInput = json["uncachedInputTokens"].int ?? 0
+        output = json["outputTokens"].int ?? 0
+        cacheRead = json["cacheReadTokens"].int ?? 0
+        cacheWrite = json["cacheWriteTokens"].int ?? 0
+    }
+
+    var total: Int { uncachedInput + output + cacheRead + cacheWrite }
+    var isEmpty: Bool { total == 0 }
+
+    /// 缓存命中率：命中读 / (未命中输入 + 命中读 + 缓存写)。
+    /// 分母为 0 时返回 nil（没有可算的意义，界面上就不显示这一项）。
+    var cacheHitRate: Double? {
+        let denom = uncachedInput + cacheRead + cacheWrite
+        guard denom > 0 else { return nil }
+        return Double(cacheRead) / Double(denom)
+    }
+
+    static func + (lhs: Self, rhs: Self) -> Self {
+        var out = Self()
+        out.uncachedInput = lhs.uncachedInput + rhs.uncachedInput
+        out.output = lhs.output + rhs.output
+        out.cacheRead = lhs.cacheRead + rhs.cacheRead
+        out.cacheWrite = lhs.cacheWrite + rhs.cacheWrite
+        return out
+    }
 }
 
 /// A shell toast: short text, an optional tone icon and a button on the right (「已归档」「撤销」).
@@ -233,6 +276,11 @@ final class AppModel {
     /// Sessions of one workspace (nil: those in no workspace), as the web sidebar
     /// derives them: subagents and blank ones never, archived only
     /// when asked; pinned first, then most recently updated.
+    /// 所有会话的用量合计（网页版底部那行「617M tok · 缓存命中 99%」）
+    var usageTotal: TokenUsage {
+        sessions.values.reduce(TokenUsage()) { $0 + $1.tokenUsage }
+    }
+
     func sessions(in workspace: Workspace?, includeArchived: Bool = false) -> [SessionSummary] {
         let members: [SessionSummary]
         if let workspace {
