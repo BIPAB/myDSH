@@ -2,28 +2,39 @@ import SwiftUI
 import UIKit
 import ImageIO
 
-/// 像素桌宠：四张循环动画 GIF，按当前状态切换。
+/// 鲸娘像素桌宠。
 ///
-/// SwiftUI 的 Image 不放 GIF 动画，所以用 UIViewRepresentable 包一个 UIImageView，
-/// 由 ImageIO 把 GIF 的每一帧解成 UIImage.animatedImage。
+/// 素材来自 https://dshtui.com/pets/whale-girl-emoji/ —— 22 个透明底循环 GIF，
+/// 每张 552×528（最近邻放大 8 倍的像素画）。这里只取当前用得到的几个状态，
+/// 其余留在 Resources/pets/gifs 里，以后要加直接扩 enum 就行。
+///
+/// SwiftUI 的 Image 不放 GIF 动画，所以用 UIViewRepresentable 包 UIImageView，
+/// 由 ImageIO 把 GIF 每帧解成 UIImage.animatedImage，帧时长用 GIF 自带的元数据。
 enum PetState: String, CaseIterable {
-    case typing        // 敲代码：正在跑
-    case notification  // 等你确认：有待处理的审批/提问
-    case sleeping      // 睡觉：闲置
-    case happy         // 完成：刚跑完
+    case idle          // 待机眨眼
+    case thinking      // 思考中
+    case typing        // 敲代码（正在跑）
+    case notification  // 需要你确认
+    case happy         // 任务完成
+    case error         // 出错了
+    case sleeping      // 呼呼大睡
 
+    /// Resources/pets/gifs 里的文件名（不含扩展名）
     var file: String {
         switch self {
-        case .typing: "pet-girl-typing-zh-light"
-        case .notification: "pet-girl-notification-zh-light"
-        case .sleeping: "pet-girl-sleeping-zh-light"
-        case .happy: "pet-girl-happy-zh-light"
+        case .idle: "01-idle"
+        case .thinking: "04-thinking"
+        case .typing: "05-typing"
+        case .notification: "11-notification"
+        case .happy: "10-happy"
+        case .error: "09-error"
+        case .sleeping: "14-sleeping"
         }
     }
 }
 
 private enum PetImages {
-    // GIF 只解一次，四张轮流用
+    // GIF 只解一次，之后复用
     nonisolated(unsafe) static var cache: [String: UIImage] = [:]
 
     static func image(for state: PetState) -> UIImage? {
@@ -61,27 +72,27 @@ private struct GIFView: UIViewRepresentable {
         let view = UIImageView()
         view.contentMode = .scaleAspectFit
         view.backgroundColor = .clear
-        view.setContentHuggingPriority(.defaultLow, for: .horizontal)
         return view
     }
 
     func updateUIView(_ view: UIImageView, context: Context) {
-        if view.image !== PetImages.image(for: state) {
-            view.image = PetImages.image(for: state)
+        let next = PetImages.image(for: state)
+        if view.image !== next {
+            view.image = next
+            view.startAnimating()
         }
-        view.startAnimating()
     }
 }
 
 /// 桌宠本体：对话区右下角、输入框上方。
 struct PetView: View {
     let state: PetState
-    var size: CGFloat = 72
+    var size: CGFloat = 84
 
     var body: some View {
         GIFView(state: state)
             .frame(width: size, height: size)
             .accessibilityHidden(true)
-            .transition(.opacity)
+            .animation(.easeInOut(duration: 0.2), value: state)
     }
 }

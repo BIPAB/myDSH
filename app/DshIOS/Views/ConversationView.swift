@@ -183,8 +183,9 @@ struct ConversationView: View {
                     PetView(
                         state: waitingInteraction(model) != nil
                             ? .notification
-                            : (model.running ? .typing : .sleeping),
-                        size: 72
+                            : (model.running ? .typing
+                               : (app.lastError != nil ? .error : .idle)),
+                        size: 84
                     )
                 }
                 .padding(.bottom, 2)
