@@ -303,9 +303,9 @@ struct DrawerView: View {
     private var engineStatus: String? {
         if devices.currentLaunchURL != nil { return nil }   // 远程模式没有本机引擎
         switch engine.phase {
-        case .starting: String(localized: "引擎启动中")
-        case .running: nil
-        case .exited(let code): String(localized: "引擎已退出（\(code)）")
+        case .starting: return String(localized: "引擎启动中")
+        case .running: return nil
+        case .exited(let code): return String(localized: "引擎已退出（\(code)）")
         }
     }
 

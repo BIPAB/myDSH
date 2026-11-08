@@ -508,9 +508,9 @@ private struct EngineCard: View {
     private var title: String {
         if isRemote { return String(localized: "已连接 \(devices.current.name)") }
         switch engine.phase {
-        case .starting: String(localized: "引擎启动中")
-        case .running: String(localized: "引擎运行中")
-        case .exited(let code): String(localized: "引擎已退出（\(code)）")
+        case .starting: return String(localized: "引擎启动中")
+        case .running: return String(localized: "引擎运行中")
+        case .exited(let code): return String(localized: "引擎已退出（\(code)）")
         }
     }
 
