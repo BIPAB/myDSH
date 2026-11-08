@@ -190,11 +190,12 @@ struct ConversationView: View {
                             ? .notification
                             : (model.running ? .typing
                                : (app.lastError != nil ? .error : .idle)),
-                        size: 64
+                        size: 52
                     )
-                    .padding(.trailing, 8)
-                    .padding(.bottom, -6)
+                    .padding(.trailing, 10)
+                    .padding(.bottom, 2)   // 完整坐在输入框上沿，不下沉
                 }
+                .zIndex(1)                     // 确保画在输入框之上
                 ComposerStatusBar(
                     model: model, keyboardUp: keyboardUp,
                     waiting: waitingInteraction(model).map { $0.isApproval ? String(localized: "等你允许") : String(localized: "等你回答") },
