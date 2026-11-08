@@ -209,7 +209,12 @@ struct ConversationView: View {
                     )
                     .allowsHitTesting(presentedInteractionId(model) == nil)
                     // 用量状态行：和网页版一样贴在输入框下方
-                    UsageStatusLine(usage: app.usageTotal, running: model.running)
+                    UsageStatusLine(
+                        usage: app.usageTotal,
+                        contextTokens: model.contextTokens,
+                        contextWindow: model.contextWindow,
+                        running: model.running
+                    )
                 }
             }
             .padding(.horizontal, 12)
@@ -1308,16 +1313,40 @@ private struct CommandBlock: View {
 /// 轮/步/tok-s 需要从事件流累计，这一版先不做。
 private struct UsageStatusLine: View {
     let usage: TokenUsage
+    /// 当前会话已占用的上下文 token（模型没报就是 nil）
+    let contextTokens: Int?
+    /// 模型上下文窗口上限（模型没报就为 nil）
+    let contextWindow: Int?
     let running: Bool
 
+    /// 上下文占比：0...1
+    private var contextFraction: Double? {
+        guard let contextWindow, contextWindow > 0, let contextTokens else { return nil }
+        return min(1, Double(contextTokens) / Double(contextWindow))
+    }
+
     var body: some View {
-        if !usage.isEmpty {
+        if !usage.isEmpty || contextTokens > 0 {
             HStack(spacing: 5) {
                 Image(systemName: "internaldrive")
                     .font(.system(size: 9, weight: .medium))
-                Text(Self.amount(usage.total) + " tok")
-                if let rate = usage.cacheHitRate {
-                    Text("· 缓存命中 \(Int((rate * 100).rounded()))%")
+                if !usage.isEmpty {
+                    Text(Self.amount(usage.total) + " tok")
+                    if let rate = usage.cacheHitRate {
+                        Text("· 缓存命中 \(Int((rate * 100).rounded()))%")
+                    }
+                }
+                // 上下文用量：爆过一次，这里一直显示，超过 85% 变红提醒
+                if let contextTokens, contextTokens > 0 {
+                    Text("· 上下文 \(Self.amount(contextTokens))")
+                    if let contextWindow {
+                        Text("/\(Self.amount(contextWindow))")
+                    }
+                    if let f = contextFraction, f >= 0.85 {
+                        Text("\(Int((f * 100).rounded()))%")
+                            .foregroundStyle(Palette.removed)
+                            .fontWeight(.semibold)
+                    }
                 }
                 Spacer(minLength: 0)
                 if running {
@@ -1328,6 +1357,8 @@ private struct UsageStatusLine: View {
             .foregroundStyle(Palette.secondary)
             .padding(.horizontal, 4)
             .padding(.top, 5)
+            .lineLimit(1)
+            .minimumScaleFactor(0.85)
             .accessibilityElement(children: .combine)
         }
     }
