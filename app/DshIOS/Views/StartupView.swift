@@ -21,7 +21,7 @@ struct StartupView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(uiColor: .systemBackground))
+        .background(Palette.background)
     }
 }
 
@@ -92,6 +92,6 @@ struct EngineTrouble: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(uiColor: .systemBackground))
+        .background(Palette.background)
     }
 }
