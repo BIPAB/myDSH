@@ -484,12 +484,17 @@ enum InAppSafari {
 /// Status dot, uptime and memory of the in-process engine.
 private struct EngineCard: View {
     @EnvironmentObject private var engine: NodeEngine
+    @EnvironmentObject private var devices: DeviceStore
+
+    /// 远程模式：引擎在那台电脑上，本机没有引擎可报状态
+    private var isRemote: Bool { devices.currentLaunchURL != nil }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 30)) { context in
             HStack(spacing: 14) {
-                if case .running = engine.phase { StatusDot(state: .running, size: 8, halo: true) }
-                else { Circle().fill(Palette.faint).frame(width: 8, height: 8) }
+                if isRemote || { if case .running = engine.phase { return true } else { return false } }() {
+                    StatusDot(state: .running, size: 8, halo: true)
+                } else { Circle().fill(Palette.faint).frame(width: 8, height: 8) }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.callout.weight(.semibold))
                     Text(detail(now: context.date)).font(.footnote).foregroundStyle(Palette.secondary)
@@ -501,6 +506,7 @@ private struct EngineCard: View {
     }
 
     private var title: String {
+        if isRemote { return String(localized: "已连接 \(devices.current.name)") }
         switch engine.phase {
         case .starting: String(localized: "引擎启动中")
         case .running: String(localized: "引擎运行中")
@@ -509,6 +515,7 @@ private struct EngineCard: View {
     }
 
     private func detail(now: Date) -> String {
+        if isRemote { return String(localized: "远程模式 · 引擎在你自己的电脑上") }
         var parts: [String] = []
         if case .running = engine.phase, let since = engine.runningSince {
             let uptime = Duration.seconds(max(60, now.timeIntervalSince(since)))
