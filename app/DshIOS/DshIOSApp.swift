@@ -24,7 +24,14 @@ struct DshIOSApp: App {
 
     var body: some Scene {
         WindowGroup(id: Self.window, for: SessionWindow.self) { $window in
-            RootView(session: window?.session)
+            Group {
+                // 桌宠调试页：-dshPetDemo 1 启动，完全不连服务器
+                if UserDefaults.standard.string(forKey: "dshPetDemo") == "1" {
+                    PetDemoView()
+                } else {
+                    RootView(session: window?.session)
+                }
+            }
                 .environmentObject(engine)
                 .environmentObject(devices)
                 .onAppear {

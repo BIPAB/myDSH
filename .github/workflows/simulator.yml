@@ -140,6 +140,14 @@ jobs:
           sleep 60
           xcrun simctl io "$UDID" screenshot shot-12-real-wallpaper.png
 
+          # 桌宠调试页：一次看到多档尺寸 + 正式布局，不依赖任何会话/网络
+          xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshPetDemo 1 || echo "启动失败"
+          sleep 6
+          xcrun simctl io "$UDID" screenshot shot-13-pet-demo.png
+          xcrun simctl launch --terminate-running-process "$UDID" "$BUNDLE" -dshPetDemo 1 -AppleInterfaceStyle Light || true
+          sleep 3
+          xcrun simctl io "$UDID" screenshot shot-14-pet-demo-light.png
+
           # 示例时间线（Debug 专属）：不依赖任何会话，直接看气泡
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
