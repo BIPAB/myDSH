@@ -340,7 +340,8 @@ private struct GoalSection: View {
             if goal.phase == "active" && armed == true {
                 Button { run(.pause) } label: { Label("暂停目标", systemImage: "pause") }
             }
-            if goal.phase == "paused" || (goal.phase == "active" && armed == false) {
+            // blocked 也要能恢复：受阻不等于结束，网页版同样提供了「播放」
+            if goal.phase == "paused" || goal.phase == "blocked" || (goal.phase == "active" && armed == false) {
                 Button { run(.resume) } label: { Label("恢复目标", systemImage: "play") }
             }
             Button { draft = goal.objective; editing = true } label: { Label("编辑目标", systemImage: "pencil") }
