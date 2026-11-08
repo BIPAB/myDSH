@@ -227,7 +227,7 @@ struct ConversationView: View {
             .padding(.top, 6)
             .padding(.bottom, 8)
             .readableWidth()
-            .background(Palette.background)
+            .background(WallpaperInsetBackground(store: WallpaperStore.shared))
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { app.composerHeight = $0 }
         }
         .modifier(ComposerDrop(composer: model.composer, enabled: model.subagentReadOnly(parentAvailable: parentAvailable(model)) == nil))

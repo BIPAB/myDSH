@@ -129,3 +129,19 @@ struct WallpaperBackground: View {
         }
     }
 }
+
+/// 输入区（composer）的背景。
+///
+/// 有壁纸时必须**透明** —— 否则会和会话层的 WallpaperBackground 叠成两层不同的透明度，
+/// 接缝处看起来割裂。没壁纸时仍是原来的纯色。
+struct WallpaperInsetBackground: View {
+    @ObservedObject var store: WallpaperStore
+
+    var body: some View {
+        if store.enabled {
+            Color.clear
+        } else {
+            Palette.background
+        }
+    }
+}
