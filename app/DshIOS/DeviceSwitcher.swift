@@ -121,7 +121,7 @@ struct DeviceSwitcher: View {
 
     private func probeAll() {
         for device in store.devices {
-            guard let url = URL(string: device.origin + "/dsh-pocket/icon-192.png") else { continue }
+            guard let url = device.pingURL else { continue }
             var req = URLRequest(url: url)
             req.httpMethod = "HEAD"
             req.timeoutInterval = 6

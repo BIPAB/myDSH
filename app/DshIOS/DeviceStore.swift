@@ -17,6 +17,14 @@ struct Device: Identifiable, Codable, Hashable {
     var origin: String
     /// 配对码（三台共用同一个，仍逐台存着，方便以后换）
     var key: String
+    /// 服务端路由用的设备 id（pc1/pc2/pc3），对应 nginx 的 dshdev cookie
+    var dev: String
+
+    /// 每次请求都要附带的 cookie：服务端按它把请求路由到对应那台电脑
+    var devCookie: String { "dshdev=\(dev)" }
+
+    /// 探活地址：服务端为每台准备了一个 /__ping/<dev>
+    var pingURL: URL? { URL(string: origin + "/__ping/" + dev) }
 
     /// 拼出给 `EngineClient(launchURL:)` 用的地址
     var launchURL: URL? {
@@ -36,9 +44,9 @@ final class DeviceStore: ObservableObject {
 
     /// 默认三台。配对码三台统一（我们服务端已经统一成 9MJ52DQX）。
     static let presets: [Device] = [
-        Device(id: "pc1", name: "沫雨",           origin: "https://dsh.spqrbipab.site:8443", key: "9MJ52DQX"),
-        Device(id: "pc2", name: "DESKTOP-M1P9A8G", origin: "https://dsh.spqrbipab.site:5173", key: "9MJ52DQX"),
-        Device(id: "pc3", name: "云电脑",          origin: "https://dsh.spqrbipab.site:8444", key: "9MJ52DQX"),
+        Device(id: "pc1", name: "沫雨",            origin: "https://dsh.spqrbipab.site:8443", key: "9MJ52DQX", dev: "pc1"),
+        Device(id: "pc2", name: "DESKTOP-M1P9A8G", origin: "https://dsh.spqrbipab.site:8443", key: "9MJ52DQX", dev: "pc2"),
+        Device(id: "pc3", name: "云电脑",           origin: "https://dsh.spqrbipab.site:8443", key: "9MJ52DQX", dev: "pc3"),
     ]
 
     private let devicesKey = "fishpocket.devices"

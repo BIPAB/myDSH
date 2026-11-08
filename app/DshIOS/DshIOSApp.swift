@@ -52,20 +52,21 @@ final class EngineConnection {
 
     /// 本机引擎（原逻辑）：generation 用引擎重启序号
     func connect(to url: URL, generation current: Int) async {
-        await connect(to: url, generation: "local-\(current)")
+        await connect(to: url, extraCookie: nil, generation: "local-\(current)")
     }
 
-    /// 远程设备：generation 用设备 id，换设备就会重建
+    /// 远程设备：generation 用设备 id，换设备就会重建连接。
+    /// 额外带上 dshdev=<dev>，服务端据此把请求路由到那台电脑（三台共用 8443 一个入口）。
     func connect(remote device: Device) async {
         guard let url = device.launchURL else { return }
-        await connect(to: url, generation: "remote-\(device.id)")
+        await connect(to: url, extraCookie: device.devCookie, generation: "remote-\(device.id)")
     }
 
-    private func connect(to url: URL, generation current: String) async {
+    private func connect(to url: URL, extraCookie: String?, generation current: String) async {
         guard current != generation else { return }
         generation = current
         app = nil                      // 先把旧连接摘掉，界面会回到"正在连接…"
-        let model = AppModel(launchURL: url)
+        let model = AppModel(launchURL: url, extraCookie: extraCookie)
         await model.connect()
         if current == generation { app = model }
     }

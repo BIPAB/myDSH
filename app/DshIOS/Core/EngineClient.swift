@@ -18,9 +18,12 @@ final class EngineClient: NSObject, @unchecked Sendable, URLSessionTaskDelegate 
     let launchURL: URL
     /// The session cookie, sent explicitly (it is named after host:port and set on a 303).
     private(set) var cookieHeader: String?
+    /// 额外携带的 cookie（本方案里是 dshdev=pcX：服务端据此路由到对应电脑）
+    let extraCookie: String?
 
-    init(launchURL: URL) {
+    init(launchURL: URL, extraCookie: String? = nil) {
         self.launchURL = launchURL
+        self.extraCookie = extraCookie
         var components = URLComponents(url: launchURL, resolvingAgainstBaseURL: false)!
         components.path = ""
         components.query = nil
@@ -52,7 +55,10 @@ final class EngineClient: NSObject, @unchecked Sendable, URLSessionTaskDelegate 
     /// A request to the engine carrying the session cookie.
     func request(_ url: URL) -> URLRequest {
         var request = URLRequest(url: url)
-        if let cookieHeader { request.setValue(cookieHeader, forHTTPHeaderField: "Cookie") }
+        var cookies: [String] = []
+        if let cookieHeader { cookies.append(cookieHeader) }
+        if let extraCookie { cookies.append(extraCookie) }
+        if !cookies.isEmpty { request.setValue(cookies.joined(separator: "; "), forHTTPHeaderField: "Cookie") }
         return request
     }
 

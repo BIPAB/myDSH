@@ -169,8 +169,8 @@ final class AppModel {
     /// Subagent children by parent, rebuilt with the list; rows ask per redraw.
     @ObservationIgnored private(set) var childSessions: [String: [String]] = [:]
 
-    init(launchURL: URL) {
-        client = EngineClient(launchURL: launchURL)
+    init(launchURL: URL, extraCookie: String? = nil) {
+        client = EngineClient(launchURL: launchURL, extraCookie: extraCookie)
         mux = StreamMux(client: client)
         account = AccountModel(client: client, mux: mux)
         cordis.attach(self)

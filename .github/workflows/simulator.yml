@@ -121,9 +121,9 @@ jobs:
           # 切到一台离线的设备（PC2），看错误处理
           xcrun simctl terminate "$UDID" "$BUNDLE" || true
           sleep 1
-          SIMCTL_CHILD_DSH_DEVICE=pc2 xcrun simctl launch "$UDID" "$BUNDLE" || echo "重启动失败"
+          SIMCTL_CHILD_DSH_DEVICE=pc3 xcrun simctl launch "$UDID" "$BUNDLE" || echo "重启动失败"
           sleep 10
-          xcrun simctl io "$UDID" screenshot shot-06-switch-pc2.png
+          xcrun simctl io "$UDID" screenshot shot-06-switch-pc3.png
 
           kill "$(cat log.pid)" 2>/dev/null
           ls -lh *.png 2>/dev/null
