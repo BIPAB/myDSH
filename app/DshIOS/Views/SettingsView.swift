@@ -1,3 +1,4 @@
+import PhotosUI
 import SafariServices
 import SwiftUI
 
@@ -8,6 +9,8 @@ import SwiftUI
 /// anywhere shows everywhere.
 struct SettingsView: View {
     @Environment(AppModel.self) private var app
+    @ObservedObject private var wallpaper = WallpaperStore.shared
+    @State private var wallpaperPick: PhotosPickerItem?
     @EnvironmentObject private var engine: NodeEngine
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openSession) private var openSession
@@ -53,6 +56,7 @@ struct SettingsView: View {
                             Text("深色").tag("dark")
                         }
                     }
+                    wallpaperRow
                     // iOS sets an app's language in its own Settings page; an app cannot switch it while running.
                     linkRow("语言", AppLanguage.name, URL(string: UIApplication.openSettingsURLString)!)
                 }
@@ -149,6 +153,42 @@ struct SettingsView: View {
                 Spacer()
                 Text(value).foregroundStyle(Palette.secondary).lineLimit(1)
                 Image(systemName: "arrow.up.right").font(.caption).foregroundStyle(Palette.faint)
+            }
+        }
+    }
+
+    /// 外观里的「壁纸」：选一张照片当背景，或移除。
+    /// 背景会统一变半透明（Palette.background），文字可读性靠材质气泡保证。
+    private var wallpaperRow: some View {
+        VStack(spacing: 8) {
+            PhotosPicker(selection: $wallpaperPick, matching: .images) {
+                HStack {
+                    Text("壁纸")
+                    Spacer()
+                    Text(wallpaper.enabled ? String(localized: "已设置") : String(localized: "默认"))
+                        .foregroundStyle(Palette.secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Palette.faint)
+                }
+                .contentShape(Rectangle())
+            }
+            .onChange(of: wallpaperPick) { _, item in
+                guard let item else { return }
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self),
+                       let image = UIImage(data: data) {
+                        wallpaper.set(image)
+                    }
+                    wallpaperPick = nil
+                }
+            }
+            if wallpaper.enabled {
+                Button(role: .destructive) {
+                    wallpaper.clear()
+                } label: {
+                    HStack { Text("移除壁纸"); Spacer() }
+                }
             }
         }
     }
